@@ -41,6 +41,8 @@ sourceCpp("distanceToPeak.cpp")
 
 
 ```{r}
+iris <- iris
+
 irisDist <- dist(iris[,1:4])
 irisClust <- densityClust(irisDist, gaussian=TRUE)
 plot(irisClust) # Inspect clustering attributes to define thresholds
@@ -58,12 +60,28 @@ BCI_3_Null <- read.csv(file.choose())
 ```
 
 
+```{r}
+
+total = nrow(BCI_3_Null)
+
+BCI_3_Format <- data.frame("Cord1" =  double(), "Cord2" = double())
+
+for (i in 1:total){
+  for (j in 1:(BCI_3_Null[i,3])){
+    newRow <- BCI_3_Null[i,1:2]
+    BCI_3_Format<- rbind(BCI_3_Format, newRow)
+  }
+}
+    
+```
+
+
 
 
 
 ```{r}
 
-BCIDist <- dist(BCI_3_Null[,2:3])
+BCIDist <- dist(BCI_3_Format[,1:2])
 BCIClust <- densityClust(BCIDist, gaussian=TRUE)
 plot(BCIClust) # Inspect clustering attributes to define thresholds
 
