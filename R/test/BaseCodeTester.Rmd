@@ -1,0 +1,78 @@
+
+#Install R3.4.0
+#Install Rtools34.exe > https://cran.r-project.org/bin/windows/Rtools/history.html
+#Use R 3.4 > change in Tool s > Global Options > General >R Version
+```{r}
+#install.packages("rmarkdown")
+#update.packages(ask = FALSE)
+#install.packages("Rcpp")
+
+
+```
+#Make sure built under R 3.4.0
+#Restart Rstudio
+
+
+---
+title: "testing density clustering code"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+
+----------------------------------------------------------------------------------
+
+```{r}
+
+writeLines(strsplit(Sys.getenv("PATH"), ";")[[1L]])
+library(Rcpp)
+source("RcppExports.R")
+source("plotDensityClust.R")
+source("densityClust.R")
+#sourceCpp("RcppExports.cpp")
+sourceCpp("localDensity.cpp")
+sourceCpp("findDistValueByRowColInd.cpp")
+sourceCpp("distanceToPeak.cpp")
+```
+
+
+```{r}
+irisDist <- dist(iris[,1:4])
+irisClust <- densityClust(irisDist, gaussian=TRUE)
+plot(irisClust) # Inspect clustering attributes to define thresholds
+
+irisClust <- findClusters(irisClust, rho=2, delta=2)
+plotMDS(irisClust)
+split(iris[,5], irisClust$clusters)
+```
+
+BCI Data
+
+
+```{r}
+BCI_3_Null <- read.csv(file.choose())
+```
+
+
+
+
+
+```{r}
+
+BCIDist <- dist(BCI_3_Null[,2:3])
+BCIClust <- densityClust(BCIDist, gaussian=TRUE)
+plot(BCIClust) # Inspect clustering attributes to define thresholds
+
+BCIClust <- findClusters(BCIClust, rho=2, delta=2)
+plotMDS(BCIClust)
+#split(iris[,5], BCIClust$clusters)
+
+
+
+```
+
+
