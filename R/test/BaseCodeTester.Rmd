@@ -101,7 +101,7 @@ if (same == 0){
 
 #make sure distance has no 0 values
 ```{r}
-BCIDist <- dist(BCI_3_Format[,1:2])
+BCIDist <- dist(BCI_3_Null[,1:2])
 
 
 d = as.matrix(BCIDist)
@@ -126,20 +126,36 @@ if (same == 0){
 ```
 
 
+#cluster with gaussian distance
 ```{r}
 
 
-BCIDist <- dist(BCI_3_Format[,1:2])
+BCIDist <- dist(BCI_3_Null[,1:2])
 
 
 
 BCIClust <- densityClust(BCIDist, gaussian=TRUE)
 plot(BCIClust) # Inspect clustering attributes to define thresholds
-BCIClust <- findClusters(BCIClust, rho=2.5, delta=0.1)
+BCIClust <- findClusters(BCIClust, rho=4, delta=0.1)
 plotMDS(BCIClust)
 #split(iris[,5], BCIClust$clusters)
 
 
+
+```
+
+
+#cluster without gaussian distance
+```{r}
+BCIDist <- dist(BCI_3_Null[,1:2])
+
+
+
+BCIClust <- densityClust(BCIDist, gaussian=FALSE)
+plot(BCIClust) # Inspect clustering attributes to define thresholds
+BCIClust <- findClusters(BCIClust, rho=5, delta=0.15)
+plotMDS(BCIClust)
+#split(iris[,5], BCIClust$clusters)
 
 ```
 
