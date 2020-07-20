@@ -28,7 +28,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ```{r}
 
-writeLines(strsplit(Sys.getenv("PATH"), ";")[[1L]])
+#writeLines(strsplit(Sys.getenv("PATH"), ";")[[1L]])
 library(Rcpp)
 source("RcppExports.R")
 source("plotDensityClust.R")
@@ -59,6 +59,25 @@ Read in teh BCI Data
 BCI_3_Null <- read.csv(file.choose())
 ```
 
+
+#cluster with gaussian distance
+```{r}
+
+
+BCIDist <- dist(BCI_3_Null[,1:2])
+
+
+
+BCIClust <- densityClust(BCIDist, gaussian=TRUE)
+BCItest <- findClusters2(BCIClust)
+plot(BCIClust) # Inspect clustering attributes to define thresholds
+BCIClust2 <- findClusters(BCIClust, rho=4, delta=0.1, verbose = TRUE)
+plotMDS(BCIClust2)
+#split(iris[,5], BCIClust$clusters)
+
+
+
+```
 
 
 Create A Formatted Dataset where each value is multiplied to fit it's num of observations
@@ -126,21 +145,21 @@ if (same == 0){
 ```
 
 
+
+#cluster without gaussian distance
 ```{r}
-
-
 BCIDist <- dist(BCI_3_Null[,1:2])
 
 
 
-BCIClust <- densityClust(BCIDist, gaussian=TRUE)
+BCIClust <- densityClust(BCIDist, gaussian=FALSE)
 plot(BCIClust) # Inspect clustering attributes to define thresholds
-BCIClust <- findClusters(BCIClust, rho=2.5, delta=0.1)
-plotMDS(BCIClust)
+
+BCIClust2 <- findClusters(BCIClust, rho=5, delta=0.15, verbose = TRUE)
+plotMDS(BCIClust2)
 #split(iris[,5], BCIClust$clusters)
 
-
-
 ```
+
 
 

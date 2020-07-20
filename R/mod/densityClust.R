@@ -63,7 +63,7 @@
 #'
 #' @noRd
 #'
-localDensity <- function(distance, weights, dc, gaussian = FALSE) {
+localDensity <- function(distance, dc, gaussian = FALSE) {
   # These implementations are faster by virtue of being written in C++
   # They also avoid the need to convert `distance` to a matrix. 
   if (gaussian) {
@@ -233,7 +233,7 @@ estimateDc <- function(distance, neighborRateLow = 0.01, neighborRateHigh = 0.02
 #'
 #' @export
 #' 
-densityClust <- function(distance, weights, dc, gaussian=FALSE, verbose = FALSE, ...) {
+densityClust <- function(distance, dc, gaussian=FALSE, verbose = FALSE, ...) {
   if (class(distance) %in% c('data.frame', 'matrix')) {
     dp_knn_args <- list(mat = distance, verbose = verbose, ...)
     res <- do.call(densityClust.knn, dp_knn_args)
@@ -436,6 +436,10 @@ print.densityCluster <- function(x, ...) {
 findClusters <- function(x, ...) {
   UseMethod("findClusters")
 }
+
+findClusters2 <- function(x, ...) {
+  UseMethod("findClusters2")
+}
 #' @rdname findClusters
 #'
 #' @param rho The threshold for local density when detecting cluster peaks
@@ -459,14 +463,24 @@ findClusters.densityCluster <- function(x, rho, delta, plot = FALSE, peaks = NUL
     runOrder <- order(x$rho, decreasing = TRUE)
     cluster <- rep(NA, length(x$rho))
     
+    #replace certain values in cluster matrix with the cluster centers
     for (i in x$peaks) {
       cluster[i] <- match(i, x$peaks)
     } 
+
+    #for all indexs that arent in the orginal cluster centers
     for (ind in setdiff(runOrder, x$peaks)) { 
+
+      #set target_* to the index where the nearest higher density neighbors of each point are equal to the non cluster center
       target_lower_density_samples <- which(x$nearest_higher_density_neighbor == ind) #all the target cells should have the same cluster id as current higher density cell
+      
       cluster[ind] <- cluster[x$nearest_higher_density_neighbor[ind]]
     }
     
+
+    #now the cluster matrix consists of cluster centers [ind] = point and other points of highest near density
+
+
     potential_duplicates <- which(is.na(cluster))
     for (ind in potential_duplicates) {
       res <- as.integer(names(which.max(table(cluster[x$nn.index[ind, ]]))))
@@ -488,8 +502,11 @@ findClusters.densityCluster <- function(x, rho, delta, plot = FALSE, peaks = NUL
     for (i in 1:length(x$peaks)) {
       if (verbose) message('the current index of the peak is ', i)
       
+      #intersection of 
       connect_samples_ind <- intersect(unique(x$nn.index[cluster == i, ]), which(cluster != i))
+
       averageRho <- outer(x$rho[cluster == i], x$rho[connect_samples_ind], '+') / 2 
+
       if (any(connect_samples_ind)) border[i] <- max(averageRho[connect_samples_ind]) 
     }
     x$halo <- x$rho < border[cluster] 
@@ -560,6 +577,169 @@ findClusters.densityCluster <- function(x, rho, delta, plot = FALSE, peaks = NUL
   x$clusters <- match(x$clusters, pk.ordr)
   
   x
+}
+
+findClusters2.densityCluster <- function(x, rho_step = 0, delta_step = 0, plot = FALSE, peaks = NULL, verbose = FALSE, ...) {
+  
+  #obtain max, min rho
+  rho_max = max(x$rho)
+  rho_min = min(x$rho)
+  #default rho step size
+  if (rho_step == 0){
+    rho_step = (rho_max - rho_min)/12
+  }
+  #obtain max, min delta
+  delta_max = max(x$delta)
+  delta_min = min(x$delta)
+  #default delta step size
+  if (delta_step == 0){
+    delta_step = (delta_max - delta_min)/12
+  }
+
+  #create data frame
+  Rho_Vals <- seq(from = rho_min + rho_step, to = rho_max - rho_step, by = rho_step)
+  Delta_Vals <- seq(from = delta_min + delta_step, to = delta_max - delta_step, by = delta_step)
+
+  testClusters <- data.frame(Rho = double(), Delta = double(), NumCenters = integer(), NumHalo = integer(), Outliers = integer(), AvgClusterDistance = double())
+
+  #implement for loop
+
+  for (rho_temp in Rho_Vals){
+    for (delta_temp in Delta_Vals){
+
+      rho = rho_temp
+      delta = delta_temp
+  
+      if (class(x$distance) %in% c('data.frame', 'matrix')) {
+        peak_ind <- which(x$rho > rho & x$delta > delta)
+        x$peaks <- peak_ind
+        
+        # Assign observations to clusters
+        runOrder <- order(x$rho, decreasing = TRUE)
+        cluster <- rep(NA, length(x$rho))
+        
+        #replace certain values in cluster matrix with the cluster centers
+        for (i in x$peaks) {
+          cluster[i] <- match(i, x$peaks)
+        } 
+
+        #for all indexs that arent in the orginal cluster centers
+        for (ind in setdiff(runOrder, x$peaks)) { 
+
+          #set target_* to the index where the nearest higher density neighbors of each point are equal to the non cluster center
+          target_lower_density_samples <- which(x$nearest_higher_density_neighbor == ind) #all the target cells should have the same cluster id as current higher density cell
+          
+          cluster[ind] <- cluster[x$nearest_higher_density_neighbor[ind]]
+        }
+        
+
+        #now the cluster matrix consists of cluster centers [ind] = point and other points of highest near density
+
+
+        potential_duplicates <- which(is.na(cluster))
+        for (ind in potential_duplicates) {
+          res <- as.integer(names(which.max(table(cluster[x$nn.index[ind, ]]))))
+          
+          if (length(res) > 0) {
+            cluster[ind] <- res #assign NA samples to the majority of its clusters 
+          } else {
+            message('try to increase the number of kNN (through argument k) at step of densityClust.')
+            cluster[ind] <- NA
+          }
+        }
+        
+        x$clusters <- factor(cluster)
+        
+        # Calculate core/halo status of observation
+        border <- rep(0, length(x$peaks))
+        if (verbose) message('Identifying core and halo for each cluster')
+        
+        for (i in 1:length(x$peaks)) {
+          if (verbose) message('the current index of the peak is ', i)
+          
+          #intersection of 
+          connect_samples_ind <- intersect(unique(x$nn.index[cluster == i, ]), which(cluster != i))
+
+          averageRho <- outer(x$rho[cluster == i], x$rho[connect_samples_ind], '+') / 2 
+          
+          if (any(connect_samples_ind)) border[i] <- max(averageRho[connect_samples_ind]) 
+        }
+        x$halo <- x$rho < border[cluster] 
+        
+        x$threshold['rho'] <- rho
+        x$threshold['delta'] <- delta
+      } 
+      else {
+        # Detect cluster peaks
+        if (!is.null(peaks)) {
+          
+          if (verbose) message('peaks are provided, clustering will be performed based on them')
+          x$peaks <- peaks
+        } else {
+          if (missing(rho) || missing(delta)) {
+            x$peaks <- NA
+            plot(x)
+            cat('Click on plot to select thresholds\n')
+            threshold <- locator(1)
+            if (missing(rho)) rho <- threshold$x
+            if (missing(delta)) delta <- threshold$y
+            plot = TRUE
+          }
+          x$peaks <- which(x$rho > rho & x$delta > delta)
+          x$threshold['rho'] <- rho
+          x$threshold['delta'] <- delta
+        }
+        if (plot) {
+          plot(x)
+        }
+        
+        # Assign observations to clusters
+        runOrder <- order(x$rho, decreasing = TRUE)
+        cluster <- rep(NA, length(x$rho))
+        if (verbose) message('Assigning each sample to a cluster based on its nearest density peak')
+        for (i in runOrder) { 
+          if ((i %% round(length(runOrder) / 25)) == 0) {
+            if (verbose) message(paste('the runOrder index is', i))
+          }
+          
+          if (i %in% x$peaks) {
+            cluster[i] <- match(i, x$peaks)
+          } else {
+            higherDensity <- which(x$rho > x$rho[i])
+            cluster[i] <- cluster[higherDensity[which.min(findDistValueByRowColInd(x$distance, attr(x$distance, 'Size'), i, higherDensity))]] 
+          }
+        }
+        x$clusters <- cluster
+        
+        # Calculate core/halo status of observation
+        border <- rep(0, length(x$peaks))
+        if (verbose) message('Identifying core and halo for each cluster')
+        for (i in 1:length(x$peaks)) {
+          if (verbose) message('the current index of the peak is ', i)
+          
+          averageRho <- outer(x$rho[cluster == i], x$rho[cluster != i], '+')/2 
+          index <- findDistValueByRowColInd(x$distance, attr(x$distance, 'Size'), which(cluster == i), which(cluster != i)) <= x$dc 
+          if (any(index)) border[i] <- max(averageRho[index]) 
+        }
+        x$halo <- x$rho < border[cluster] 
+      }
+      x$halo <- x$rho < border[cluster]
+      
+      # Sort cluster designations by gamma (= rho * delta)
+      gamma <- x$rho * x$delta
+      pk.ordr <- order(gamma[x$peaks], decreasing = TRUE)
+      x$peaks <- x$peaks[pk.ordr]
+      x$clusters <- match(x$clusters, pk.ordr)
+      
+      #x
+
+      if (length(x$peaks) > 1){
+        testClusters[nrow(testClusters) + 1, ] = c(rho, delta, length(x$peaks), sum(x$Halo), 0, 0 )
+      }
+    }
+  }
+
+  testClusters
 }
 
 #' Extract cluster membership from a densityCluster object
