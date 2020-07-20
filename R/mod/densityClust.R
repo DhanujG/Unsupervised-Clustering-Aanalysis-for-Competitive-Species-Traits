@@ -586,21 +586,21 @@ findClusters2.densityCluster <- function(x, rho_step = 0, delta_step = 0, plot =
   rho_min = min(x$rho)
   #default rho step size
   if (rho_step == 0){
-    rho_step = (rho_max - rho_min)/12
+    rho_step = (rho_max - rho_min)/22
   }
   #obtain max, min delta
   delta_max = max(x$delta)
   delta_min = min(x$delta)
   #default delta step size
   if (delta_step == 0){
-    delta_step = (delta_max - delta_min)/12
+    delta_step = (delta_max - delta_min)/22
   }
 
   #create data frame
   Rho_Vals <- seq(from = rho_min + rho_step, to = rho_max - rho_step, by = rho_step)
   Delta_Vals <- seq(from = delta_min + delta_step, to = delta_max - delta_step, by = delta_step)
 
-  testClusters <- data.frame(Rho = double(), Delta = double(), NumCenters = integer(), NumHalo = integer(), Outliers = integer(), AvgClusterDistance = double())
+  testClusters <- data.frame(Rho = double(), Delta = double(), NumCenters = integer(), NumHalo = integer(), AvgClusterSize = integer(), AvgClusterDistance = double())
 
   #implement for loop
 
@@ -731,10 +731,12 @@ findClusters2.densityCluster <- function(x, rho_step = 0, delta_step = 0, plot =
       x$peaks <- x$peaks[pk.ordr]
       x$clusters <- match(x$clusters, pk.ordr)
       
+
+
       #x
 
       if (length(x$peaks) > 1){
-        testClusters[nrow(testClusters) + 1, ] = c(rho, delta, length(x$peaks), sum(x$Halo), 0, 0 )
+        testClusters[nrow(testClusters) + 1, ] = c(rho, delta, length(x$peaks), length(x$halo[x$halo == TRUE]), 0, 0 )
       }
     }
   }
