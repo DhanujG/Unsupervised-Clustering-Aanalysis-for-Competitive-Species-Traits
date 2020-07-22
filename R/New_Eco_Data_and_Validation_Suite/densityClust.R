@@ -437,8 +437,8 @@ findClusters <- function(x, ...) {
   UseMethod("findClusters")
 }
 
-findClusters2 <- function(x, ...) {
-  UseMethod("findClusters2")
+findCluster_validationChart <- function(x, ...) {
+  UseMethod("findCluster_validationChart")
 }
 #' @rdname findClusters
 #'
@@ -579,28 +579,28 @@ findClusters.densityCluster <- function(x, rho, delta, plot = FALSE, peaks = NUL
   x
 }
 
-findClusters2.densityCluster <- function(x, rho_step = 0, delta_step = 0, plot = FALSE, peaks = NULL, verbose = FALSE, ...) {
+findCluster_validationChart.densityCluster <- function(x, rho_step = 0, delta_step = 0, plot = FALSE, peaks = NULL, verbose = FALSE, ...) {
   
   #obtain max, min rho
-  rho_max = max(x$rho)
-  rho_min = min(x$rho)
+  rho_max = max(x$rho) - 0.01
+  rho_min = min(x$rho) + 0.01
   #default rho step size
   if (rho_step == 0){
-    rho_step = (rho_max - rho_min)/22
+    rho_step = (rho_max - rho_min)/10
   }
   #obtain max, min delta
-  delta_max = max(x$delta)
-  delta_min = min(x$delta)
+  delta_max = max(x$delta) - 0.01
+  delta_min = min(x$delta) + 0.01
   #default delta step size
   if (delta_step == 0){
-    delta_step = (delta_max - delta_min)/22
+    delta_step = (delta_max - delta_min)/10
   }
 
   #create data frame
-  Rho_Vals <- seq(from = rho_min + rho_step, to = rho_max - rho_step, by = rho_step)
-  Delta_Vals <- seq(from = delta_min + delta_step, to = delta_max - delta_step, by = delta_step)
+  Rho_Vals <- seq(from = rho_min , to = rho_max , by = rho_step)
+  Delta_Vals <- seq(from = delta_min , to = delta_max , by = delta_step)
 
-  testClusters <- data.frame(Rho = double(), Delta = double(), NumCenters = integer(), NumHalo = integer(), AvgClusterSize = integer(), AvgClusterDistance = double())
+  testClusters <- data.frame(Rho = double(), Delta = double(), Gamma = double(), ClusterCenters = integer(), Unclassified = integer(), NumOutliers = integer(), DBCV = double())
 
   #implement for loop
 
@@ -736,7 +736,7 @@ findClusters2.densityCluster <- function(x, rho_step = 0, delta_step = 0, plot =
       #x
 
       if (length(x$peaks) > 1){
-        testClusters[nrow(testClusters) + 1, ] = c(rho, delta, length(x$peaks), length(x$halo[x$halo == TRUE]), 0, 0 )
+        testClusters[nrow(testClusters) + 1, ] = c(rho, delta, (rho*delta), length(x$peaks), length(x$halo[x$halo == TRUE]), 0, 0 )
       }
     }
   }
