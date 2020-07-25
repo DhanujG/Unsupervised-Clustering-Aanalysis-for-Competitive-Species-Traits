@@ -5,7 +5,9 @@
 ```{r}
 #install.packages("rmarkdown")
 #update.packages(ask = FALSE)
-#install.packages("Rcpp")
+#install.packages("Rcpp")\
+
+install.packages("reticulate")
 
 
 ```
@@ -63,15 +65,15 @@ BCI_3_Null <- read.csv(file.choose())
 #cluster with gaussian distance
 ```{r}
 
-
+BCI_Noweights <- as.vector(BCI_3_Null[,1:2])
 BCIDist <- dist(BCI_3_Null[,1:2])
 
 
 
-BCIClust <- densityClust(BCIDist, gaussian=TRUE)
+BCIClust <- densityClust(BCI_Noweights, BCIDist, gaussian=TRUE)
 
 
-BCIComb <- findCluster_validationChart(BCIClust)
+BCIComb <- findCluster_validationChart(BCI_Noweights,BCIClust)
 
 
 

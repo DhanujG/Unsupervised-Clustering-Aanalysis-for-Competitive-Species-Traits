@@ -1,3 +1,10 @@
+library(reticulate)
+#use_python("/usr/local/bin/python")
+#use_virtualenv("myenv")
+#source_python("DBCV.py")
+
+
+
 #' Clustering by fast search and find of density peaks
 #'
 #' This package implement the clustering algorithm described by Alex Rodriguez
@@ -233,7 +240,7 @@ estimateDc <- function(distance, neighborRateLow = 0.01, neighborRateHigh = 0.02
 #'
 #' @export
 #' 
-densityClust <- function(distance, dc, gaussian=FALSE, verbose = FALSE, ...) {
+densityClust <- function(orig, distance, dc, gaussian=FALSE, verbose = FALSE, ...) {
   if (class(distance) %in% c('data.frame', 'matrix')) {
     dp_knn_args <- list(mat = distance, verbose = verbose, ...)
     res <- do.call(densityClust.knn, dp_knn_args)
@@ -250,6 +257,7 @@ densityClust <- function(distance, dc, gaussian=FALSE, verbose = FALSE, ...) {
     
     if (verbose) message('Returning result...')
     res <- list(
+      orig = orig,
       rho = rho, 
       delta = delta, 
       distance = distance, 
@@ -437,7 +445,7 @@ findClusters <- function(x, ...) {
   UseMethod("findClusters")
 }
 
-findCluster_validationChart <- function(x, ...) {
+findCluster_validationChart <- function(orig, x, ...) {
   UseMethod("findCluster_validationChart")
 }
 #' @rdname findClusters
@@ -736,7 +744,8 @@ findCluster_validationChart.densityCluster <- function(x, rho_step = 0, delta_st
       #x
 
       if (length(x$peaks) > 1){
-        testClusters[nrow(testClusters) + 1, ] = c(rho, delta, (rho*delta), length(x$peaks), length(x$halo[x$halo == TRUE]), 0, 0 )
+        tempDBCV <- DBCV(orig, x$clusters)
+        testClusters[nrow(testClusters) + 1, ] = c(rho, delta, (rho*delta), length(x$peaks), length(x$halo[x$halo == TRUE]), 0, tempDBCV )
       }
     }
   }
