@@ -1,7 +1,8 @@
 library(reticulate)
+py_install("scipy")
 #use_python("/usr/local/bin/python")
 #use_virtualenv("myenv")
-#source_python("DBCV.py")
+source_python("DBCV.py")
 
 
 
@@ -241,6 +242,12 @@ estimateDc <- function(distance, neighborRateLow = 0.01, neighborRateHigh = 0.02
 #' @export
 #' 
 densityClust <- function(orig, distance, dc, gaussian=FALSE, verbose = FALSE, ...) {
+
+
+  #orig = unclass(orig)
+  path = paste(getwd(), "/temp.txt", sep = "")
+  write.table(orig, file = path, col.names = F, row.names =F, sep = ",")
+
   if (class(distance) %in% c('data.frame', 'matrix')) {
     dp_knn_args <- list(mat = distance, verbose = verbose, ...)
     res <- do.call(densityClust.knn, dp_knn_args)
@@ -257,7 +264,7 @@ densityClust <- function(orig, distance, dc, gaussian=FALSE, verbose = FALSE, ..
     
     if (verbose) message('Returning result...')
     res <- list(
-      orig = orig,
+      fpath = path,
       rho = rho, 
       delta = delta, 
       distance = distance, 
@@ -445,7 +452,7 @@ findClusters <- function(x, ...) {
   UseMethod("findClusters")
 }
 
-findCluster_validationChart <- function(orig, x, ...) {
+findCluster_validationChart <- function(x, ...) {
   UseMethod("findCluster_validationChart")
 }
 #' @rdname findClusters
@@ -744,7 +751,7 @@ findCluster_validationChart.densityCluster <- function(x, rho_step = 0, delta_st
       #x
 
       if (length(x$peaks) > 1){
-        tempDBCV <- DBCV(orig, x$clusters)
+        tempDBCV <- DBCV(x$fpath,x$clusters)
         testClusters[nrow(testClusters) + 1, ] = c(rho, delta, (rho*delta), length(x$peaks), length(x$halo[x$halo == TRUE]), 0, tempDBCV )
       }
     }

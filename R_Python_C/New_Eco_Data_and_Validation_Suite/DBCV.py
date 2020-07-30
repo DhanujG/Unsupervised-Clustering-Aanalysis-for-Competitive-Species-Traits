@@ -12,7 +12,7 @@ from scipy.sparse.csgraph import minimum_spanning_tree
 from scipy.sparse import csgraph
 
 
-def DBCV(X, labels, dist_function=euclidean):
+def DBCV(fpath, labels, dist_function=euclidean):
     """
     Density Based clustering validation
     Args:
@@ -24,6 +24,7 @@ def DBCV(X, labels, dist_function=euclidean):
     Returns: cluster_validity (float)
         score in range[-1, 1] indicating validity of clustering assignments
     """
+    X = np.loadtxt(fpath, comments="#", delimiter=",")
     graph = _mutual_reach_dist_graph(X, labels, dist_function)
     mst = _mutual_reach_dist_MST(graph)
     cluster_validity = _clustering_validity_index(mst, labels)

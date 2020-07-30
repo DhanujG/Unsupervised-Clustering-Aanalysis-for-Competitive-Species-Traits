@@ -58,7 +58,9 @@ BCI Data
 
 Read in teh BCI Data
 ```{r}
-BCI_3_Null <- read.csv(file.choose())
+Colnames = c('X','Y','Weight')
+BCI_3_Null <- read.csv(file.choose(), header = FALSE)
+#dimnames(BCI_3_Null) <- NULL
 ```
 
 
@@ -72,8 +74,10 @@ BCIDist <- dist(BCI_3_Null[,1:2])
 
 BCIClust <- densityClust(BCI_Noweights, BCIDist, gaussian=TRUE)
 
+#orig = data.matrix(BCI_Noweights, rownames.force = NA)
+orig = simplify2array(BCI_Noweights)
 
-BCIComb <- findCluster_validationChart(BCI_Noweights,BCIClust)
+BCIComb <- findCluster_validationChart(BCIClust)
 
 
 
