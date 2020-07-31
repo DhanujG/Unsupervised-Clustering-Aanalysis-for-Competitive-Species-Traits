@@ -12,7 +12,7 @@ from scipy.sparse.csgraph import minimum_spanning_tree
 from scipy.sparse import csgraph
 
 
-def DBCV(fpath, labels, dist_function=euclidean):
+def DBCV(fpath, labelpath, dist_function=euclidean):
     """
     Density Based clustering validation
     Args:
@@ -25,8 +25,12 @@ def DBCV(fpath, labels, dist_function=euclidean):
         score in range[-1, 1] indicating validity of clustering assignments
     """
     X = np.loadtxt(fpath, comments="#", delimiter=",")
+    labels = np.loadtxt(labelpath, comments="#", delimiter=",")
+    #print("making graph")
     graph = _mutual_reach_dist_graph(X, labels, dist_function)
+    #print("making MST")
     mst = _mutual_reach_dist_MST(graph)
+    #print("assigning cluster validity")
     cluster_validity = _clustering_validity_index(mst, labels)
     return cluster_validity
 
@@ -235,3 +239,14 @@ def _get_label_members(X, labels, cluster):
     indices = np.where(labels == cluster)[0]
     members = X[indices]
     return members
+
+
+#print("time to start")
+#fpath = "C:/Users/dhanu/Documents/DhanujG/Projects/Unsupervised Clustering Analysis for Competitive Species Traits/R_Python_C/New_Eco_Data_and_Validation_Suite/temp.txt"
+#cpath = "C:/Users/dhanu/Documents/DhanujG/Projects/Unsupervised Clustering Analysis for Competitive Species Traits/R_Python_C/New_Eco_Data_and_Validation_Suite/clusters.txt"
+#Y = np.loadtxt(cpath)
+#tempDBCV = DBCV(fpath, Y)
+#print(tempDBCV)
+#exit()
+
+

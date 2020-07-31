@@ -10,4 +10,6 @@ Weight Functionality is working!
 
 Editing PlotMDS to scale points based on weights- DONE
 
-NOTE# Need to fix DBCV, implement DBCV with weights, & change cluster center shape -> Uncorrected
+DBCV fixed without weights- DONE
+
+NOTE#  implement DBCV with weights, & change cluster center shape -> Uncorrected

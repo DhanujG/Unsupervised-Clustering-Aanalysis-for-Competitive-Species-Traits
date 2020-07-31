@@ -67,7 +67,7 @@ BCIClust <- densityClust(BCI_Noweights, BCI_Weights, BCIDist, gaussian=TRUE, ver
 ```{r}
 
 
-BCIComb2 <- findCluster_validationChart(BCIClust)
+BCIChart <- findCluster_validationChart(BCIClust)
 
 ```
 
@@ -76,8 +76,8 @@ BCIComb2 <- findCluster_validationChart(BCIClust)
 
 
 plot(BCIClust) # Inspect clustering attributes to define thresholds
-BCIClust2 <- findClusters(BCIClust, rho=700, delta=0.1, verbose = TRUE)
-plotMDS(BCIClust2)
+BCIClust <- findClusters(BCIClust, rho=330, delta=0.21, verbose = TRUE)
+plotMDS(BCIClust)
 #split(iris[,5], BCIClust$clusters)
 ```
 

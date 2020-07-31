@@ -300,6 +300,8 @@ densityClust <- function(orig, weights, distance, dc, gaussian=FALSE, verbose = 
     
     if (verbose) message('Returning result...')
     res <- list(
+      size = attr(distance, 'Size'),
+      truesize = sum(weights),
       weights = weights,
       fpath = path,
       rho = rho, 
@@ -641,8 +643,11 @@ findClusters.densityCluster <- function(x, rho, delta, plot = FALSE, peaks = NUL
   gamma <- x$rho * x$delta
   pk.ordr <- order(gamma[x$peaks], decreasing = TRUE)
   x$peaks <- x$peaks[pk.ordr]
-  x$clusters2 <- x$clusters 
+  
   x$clusters <- match(x$clusters, pk.ordr)
+  for (z in 1:x$size){
+        x$clusters2[z] = x$peaks[x$clusters[z]]
+        }
   
   x
 }
@@ -797,18 +802,29 @@ findCluster_validationChart.densityCluster <- function(x, rho_step = 0, delta_st
       gamma <- x$rho * x$delta
       pk.ordr <- order(gamma[x$peaks], decreasing = TRUE)
       x$peaks <- x$peaks[pk.ordr]
-      x$clusters2 <- x$clusters 
+      
       x$clusters <- match(x$clusters, pk.ordr)
       
+      #assign cluster matrix of raw indices to cluster2
+      
 
+      
 
-      #x
+      if (length(x$peaks) > 1 && (length(x$peaks) < 20) ){
 
-      if (length(x$peaks) > 1){
+        for (z in 1:x$size){
+        x$clusters2[z] = x$peaks[x$clusters[z]]
+        }
+
+        cpath = paste(getwd(), "/temp_cluster.txt", sep = "")
+        write.table(x$clusters2, file = cpath, col.names = F, row.names =F, sep = ",")
+
         #print(x$clusters)
-        message(paste("Running DBCV for clusters:", length(x$peaks)))
-        tempDBCV <- DBCV(x$fpath,(x$clusters2 - 1))
+        message(paste("Running DBCV for cluster number:", length(x$peaks)))
+        tempDBCV <- DBCV(x$fpath,cpath)
         message(paste("DBCV was: ", tempDBCV))
+
+
         testClusters[nrow(testClusters) + 1, ] = c(rho, delta, (rho*delta), length(x$peaks), length(x$halo[x$halo == TRUE]), 0, tempDBCV )
       }
     }
