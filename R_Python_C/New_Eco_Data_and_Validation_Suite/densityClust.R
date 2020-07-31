@@ -71,13 +71,13 @@ source_python("DBCV.py")
 #'
 #' @noRd
 #'
-localDensity <- function(distance, dc, gaussian = FALSE) {
+localDensity <- function(weights, distance, dc, gaussian = FALSE) {
   # These implementations are faster by virtue of being written in C++
   # They also avoid the need to convert `distance` to a matrix. 
   if (gaussian) {
     res <- gaussianLocalDensity(distance, attr(distance, "Size"), dc)
   } else {
-    res <- nonGaussianLocalDensity(distance, attr(distance, "Size"), dc)
+    res <- nonGaussianLocalDensity(weights, attr(distance, "Size") * sum(weights), distance, attr(distance, "Size"), dc)
   }
   if (is.null(attr(distance, 'Labels'))) {
     names(res) <- NULL
@@ -106,6 +106,21 @@ distanceToPeak <- function(distance, rho) {
   names(res) <- names(rho)
   res
 }
+
+
+## turn 1 distance matrix into i,j coordinates
+get_ij <- function (k, dist_obj) {
+  if (!inherits(dist_obj, "dist")) stop("please provide a 'dist' object")
+  n <- attr(dist_obj, "Size")
+  valid <- (k >= 1) & (k <= n * (n - 1) / 2)
+  k_valid <- k[valid]
+  j <- rep.int(NA_real_, length(k))
+  j[valid] <- floor(((2 * n + 1) - sqrt((2 * n - 1) ^ 2 - 8 * (k_valid - 1))) / 2)
+  i <- j + k - (2 * n - j) * (j - 1) / 2
+  cbind(i, j)
+  }
+
+
 #' Estimate the distance cutoff for a specified neighbor rate
 #'
 #' This function calculates a distance cutoff value for a specific distance
@@ -136,7 +151,9 @@ distanceToPeak <- function(distance, rho) {
 #'
 #' @export
 #' 
-estimateDc <- function(distance, neighborRateLow = 0.01, neighborRateHigh = 0.02) {
+
+
+estimateDc <- function(weights, distance, neighborRateLow = 0.01, neighborRateHigh = 0.02) {
   # This implementation uses binary search instead of linear search.
   
   size <- attr(distance, 'Size')
@@ -151,6 +168,9 @@ estimateDc <- function(distance, neighborRateLow = 0.01, neighborRateHigh = 0.02
   low <- min(distance)
   high <- max(distance)
   dc <- 0
+  newsize <- sum(weights)
+  uniquesize <- size
+  size <- newsize
   while (TRUE) {
     dc <- (low + high) / 2
     # neighborRate = average of number of elements of comb per row that are
@@ -160,7 +180,19 @@ estimateDc <- function(distance, neighborRateLow = 0.01, neighborRateHigh = 0.02
     # equivalent. The diagonal of the matrix will always be 0, so as long as dc
     # is greater than 0, we add 1 for every element of the diagonal, which is
     # the same as size
-    neighborRate <- (((sum(distance < dc) * 2 + (if (0 <= dc) size)) / size - 1)) / size
+    sum_distance_below_dc <- 0
+
+    for (k in 1:origsize){
+
+      if (distance[k] < dc){
+        i,j <- get_ij(k, distance)
+        sum_distance_below_dc <- sum_distance_below_dc + (weights[i]*weights[j])
+      }
+
+    }
+
+
+    neighborRate <- (((sum_distance_below_dc * 2 + (if (0 <= dc) size)) / size - 1)) / size
     if (neighborRate >= neighborRateLow && neighborRate <= neighborRateHigh) break
     
     if (neighborRate < neighborRateLow) {
@@ -241,7 +273,7 @@ estimateDc <- function(distance, neighborRateLow = 0.01, neighborRateHigh = 0.02
 #'
 #' @export
 #' 
-densityClust <- function(orig, distance, dc, gaussian=FALSE, verbose = FALSE, ...) {
+densityClust <- function(weights, distance, dc, gaussian=FALSE, verbose = FALSE, ...) {
 
 
   #orig = unclass(orig)
@@ -254,16 +286,17 @@ densityClust <- function(orig, distance, dc, gaussian=FALSE, verbose = FALSE, ..
   } else {
     if (missing(dc)) {
       if (verbose)  message('Calculating the distance cutoff')
-      dc <- estimateDc(distance)
+      dc <- estimateDc(weights, distance)
     }
     if (verbose) message('Calculating the local density for each sample based on distance cutoff')
-    rho <- localDensity(distance, dc, gaussian = gaussian)
+    rho <- localDensity(weights, distance, dc, gaussian = gaussian)
     
     if (verbose) message('Calculating the minimal distance of a sample to another sample with higher density')
     delta <- distanceToPeak(distance, rho)
     
     if (verbose) message('Returning result...')
     res <- list(
+      weights = weights
       fpath = path,
       rho = rho, 
       delta = delta, 
@@ -271,7 +304,8 @@ densityClust <- function(orig, distance, dc, gaussian=FALSE, verbose = FALSE, ..
       dc = dc, 
       threshold = c(rho = NA, delta = NA), 
       peaks = NA, 
-      clusters = NA, 
+      clusters = NA,
+      clusters2 = NA, 
       halo = NA, 
       knn_graph = NA, 
       nearest_higher_density_neighbor = NA, 
@@ -589,6 +623,7 @@ findClusters.densityCluster <- function(x, rho, delta, plot = FALSE, peaks = NUL
   gamma <- x$rho * x$delta
   pk.ordr <- order(gamma[x$peaks], decreasing = TRUE)
   x$peaks <- x$peaks[pk.ordr]
+  x$clusters2 <- x$clusters 
   x$clusters <- match(x$clusters, pk.ordr)
   
   x
@@ -744,6 +779,7 @@ findCluster_validationChart.densityCluster <- function(x, rho_step = 0, delta_st
       gamma <- x$rho * x$delta
       pk.ordr <- order(gamma[x$peaks], decreasing = TRUE)
       x$peaks <- x$peaks[pk.ordr]
+      x$clusters2 <- x$clusters 
       x$clusters <- match(x$clusters, pk.ordr)
       
 
@@ -751,7 +787,10 @@ findCluster_validationChart.densityCluster <- function(x, rho_step = 0, delta_st
       #x
 
       if (length(x$peaks) > 1){
-        tempDBCV <- DBCV(x$fpath,x$clusters)
+        #print(x$clusters)
+        message(paste("Running DBCV for clusters:", length(x$peaks)))
+        tempDBCV <- DBCV(x$fpath,(x$clusters2 - 1))
+        message(paste("DBCV was: ", tempDBCV))
         testClusters[nrow(testClusters) + 1, ] = c(rho, delta, (rho*delta), length(x$peaks), length(x$halo[x$halo == TRUE]), 0, tempDBCV )
       }
     }

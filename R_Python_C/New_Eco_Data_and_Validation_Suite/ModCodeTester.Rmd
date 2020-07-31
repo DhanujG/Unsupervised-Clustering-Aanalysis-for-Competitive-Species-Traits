@@ -56,7 +56,7 @@ split(iris[,5], irisClust$clusters)
 
 BCI Data
 
-Read in teh BCI Data
+Read in the BCI Data
 ```{r}
 Colnames = c('X','Y','Weight')
 BCI_3_Null <- read.csv(file.choose(), header = FALSE)
@@ -64,20 +64,20 @@ BCI_3_Null <- read.csv(file.choose(), header = FALSE)
 ```
 
 
-#cluster with gaussian distance
+#cluster with non-gaussian distance
 ```{r}
-
+BCI_Weights <- as.vector(BCI_3_Null[,3])
 BCI_Noweights <- as.vector(BCI_3_Null[,1:2])
 BCIDist <- dist(BCI_3_Null[,1:2])
 
 
 
-BCIClust <- densityClust(BCI_Noweights, BCIDist, gaussian=TRUE)
+BCIClust <- densityClust(BCI_Weights, BCIDist, gaussian=FALSE)
 
 #orig = data.matrix(BCI_Noweights, rownames.force = NA)
-orig = simplify2array(BCI_Noweights)
+#orig = simplify2array(BCI_Noweights)
 
-BCIComb <- findCluster_validationChart(BCIClust)
+BCIComb2 <- findCluster_validationChart(BCIClust)
 
 
 

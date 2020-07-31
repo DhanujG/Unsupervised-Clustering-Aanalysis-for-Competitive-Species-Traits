@@ -28,7 +28,7 @@ NumericVector gaussianLocalDensity(NumericVector distance, int nrow, double dc) 
 }
 
 // [[Rcpp::export]]
-NumericVector nonGaussianLocalDensity(NumericVector distance, int nrow, double dc) {
+NumericVector nonGaussianLocalDensity(NumericVector weights, int truesize, NumericVector distance, int nrow, double dc) {
   int ncol = nrow;
   NumericVector result(nrow);
   int i = 0;
@@ -42,14 +42,20 @@ NumericVector nonGaussianLocalDensity(NumericVector distance, int nrow, double d
       if(i > distance.size()){
         // Rcout << "Warning: index is larger than the length of the distance vector" << distance[i] << std::endl;
       }
+      
+      //add in neightbors with weights
       if (distance[i] < dc) {
-        result[row] += 1;
-        result[col] += 1;
+        result[row] += weights[col];
+        result[col] += weights[row];
       } else {
         // do nothing
       }
       i++;
     }
+  }
+
+  for (int i = 1, i =  nrow; i++){
+    result[i] = result[i] + (weights[i] - 1);
   }
   // if(verbose){
   //  Rcout << "last index is " << i << " length of distance is " << distance.size() << "number of rows is " << nrow << "number of columns is " << ncol << std::endl;

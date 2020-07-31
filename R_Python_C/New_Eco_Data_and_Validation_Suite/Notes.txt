@@ -1,0 +1,8 @@
+Added Python Functionality in findvalidation for DBCV - DONE
+
+Editing Estimate DC from DensityClust to include weights - DONE
+
+Editing Densityclust else statement (r dist matrix passed in) for localdensity to include weights
+        First editing Non Gaussian -DONE
+
+NOTE# Need to implement Gaussian and DBCV with weights -> Uncorrected
