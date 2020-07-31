@@ -2,7 +2,7 @@
 using namespace Rcpp;
 
 // [[Rcpp::export]]
-NumericVector gaussianLocalDensity(NumericVector distance, int nrow, double dc) {
+NumericVector gaussianLocalDensity(NumericVector weights, NumericVector distance, int nrow, double dc) {
   int size = distance.size();
   NumericVector half(size);
   for (int i = 0; i < size; i++) {
@@ -18,10 +18,14 @@ NumericVector gaussianLocalDensity(NumericVector distance, int nrow, double dc) 
   for (int col = 0; col < ncol; col++) {
     for (int row = col + 1; row < nrow; row++) {
       double temp = half[i];
-      result[row] += temp;
-      result[col] += temp;
+      result[row] += temp * (weights[col]);
+      result[col] += temp * (weights[row]);
       i++;
     }
+  }
+
+  for (int j = 0; j <  nrow; j++){
+    result[j] = result[j] + (weights[j] - 1);
   }
   
   return result;
@@ -54,11 +58,35 @@ NumericVector nonGaussianLocalDensity(NumericVector weights, int truesize, Numer
     }
   }
 
-  for (int i = 1, i =  nrow; i++){
-    result[i] = result[i] + (weights[i] - 1);
+  for (int j = 0; j <  nrow; j++){
+    result[j] = result[j] + (weights[j] - 1);
   }
   // if(verbose){
   //  Rcout << "last index is " << i << " length of distance is " << distance.size() << "number of rows is " << nrow << "number of columns is " << ncol << std::endl;
   // }
   return result;
+}
+
+// [[Rcpp::export]]
+int SumCutOff(NumericVector weights, NumericVector distance, int nrow, double dc) {
+  int ncol = nrow;
+  int sum = 0;
+  int i = 0;
+  for (int col = 0; col < ncol; col++) {
+    for (int row = col + 1; row < nrow; row++) {
+      
+      
+      //add in neightbors with weights
+      if (distance[i] < dc) {
+        sum = sum + (weights[col] * weights[row]);
+      } 
+      i++;
+    }
+  }
+  
+  
+  // if(verbose){
+  //  Rcout << "last index is " << i << " length of distance is " << distance.size() << "number of rows is " << nrow << "number of columns is " << ncol << std::endl;
+  // }
+  return sum;
 }

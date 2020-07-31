@@ -13,11 +13,16 @@ smallest_dist_rho_order_coords <- function(ordered_rho, ordered_coords) {
     .Call('_densityClust_smallest_dist_rho_order_coords', PACKAGE = 'densityClust', ordered_rho, ordered_coords)
 }
 
-gaussianLocalDensity <- function(distance, nrow, dc) {
-    .Call('_densityClust_gaussianLocalDensity', PACKAGE = 'densityClust', distance, nrow, dc)
+gaussianLocalDensity <- function(weights, distance, nrow, dc) {
+    .Call('_densityClust_gaussianLocalDensity', PACKAGE = 'densityClust', weights, distance, nrow, dc)
 }
 
-nonGaussianLocalDensity <- function(distance, nrow, dc) {
-    .Call('_densityClust_nonGaussianLocalDensity', PACKAGE = 'densityClust', distance, nrow, dc)
+nonGaussianLocalDensity <- function(weights, truesize, distance, nrow, dc) {
+    .Call('_densityClust_nonGaussianLocalDensity', PACKAGE = 'densityClust', weights, truesize, distance, nrow, dc)
 }
+
+SumCutOff <- function(weights, distance, nrow, dc) {
+    .Call('_densityClust_SumCutOff', PACKAGE = 'densityClust', weights, distance, nrow, dc)
+}
+
 

@@ -4,5 +4,10 @@ Editing Estimate DC from DensityClust to include weights - DONE
 
 Editing Densityclust else statement (r dist matrix passed in) for localdensity to include weights
         First editing Non Gaussian -DONE
+        First editing Gaussian -DONE (check again for mathematical validity)
 
-NOTE# Need to implement Gaussian and DBCV with weights -> Uncorrected
+Weight Functionality is working!
+
+Editing PlotMDS to scale points based on weights- DONE
+
+NOTE# Need to fix DBCV, implement DBCV with weights, & change cluster center shape -> Uncorrected

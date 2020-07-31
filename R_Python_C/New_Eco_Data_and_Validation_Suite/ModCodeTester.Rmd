@@ -41,6 +41,61 @@ sourceCpp("findDistValueByRowColInd.cpp")
 sourceCpp("distanceToPeak.cpp")
 ```
 
+---------------BCI Data--------------------------
+
+#Read in the BCI Data
+```{r}
+Colnames = c('X','Y','Weight')
+BCI_3_Null <- read.csv(file.choose(), header = FALSE)
+#dimnames(BCI_3_Null) <- NULL
+```
+
+```{r}
+BCI_Weights <- as.vector(BCI_3_Null[,3])
+BCI_Noweights <- as.vector(BCI_3_Null[,1:2])
+BCIDist <- dist(BCI_3_Null[,1:2])
+```
+
+#cluster with non-gaussian distance
+
+```{r}
+BCIClust <- densityClust(BCI_Noweights, BCI_Weights, BCIDist, gaussian=TRUE, verbose = TRUE)
+```
+
+
+#get validation metrics fro rho/gamma combinations
+```{r}
+
+
+BCIComb2 <- findCluster_validationChart(BCIClust)
+
+```
+
+#Plot the BCI Data with Chosen Clusters
+```{r}
+
+
+plot(BCIClust) # Inspect clustering attributes to define thresholds
+BCIClust2 <- findClusters(BCIClust, rho=700, delta=0.1, verbose = TRUE)
+plotMDS(BCIClust2)
+#split(iris[,5], BCIClust$clusters)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+---------Test Code/ Old Code---------------
+
+
 
 ```{r}
 iris <- iris
@@ -52,42 +107,6 @@ plot(irisClust) # Inspect clustering attributes to define thresholds
 irisClust <- findClusters(irisClust, rho=2, delta=2)
 plotMDS(irisClust)
 split(iris[,5], irisClust$clusters)
-```
-
-BCI Data
-
-Read in the BCI Data
-```{r}
-Colnames = c('X','Y','Weight')
-BCI_3_Null <- read.csv(file.choose(), header = FALSE)
-#dimnames(BCI_3_Null) <- NULL
-```
-
-
-#cluster with non-gaussian distance
-```{r}
-BCI_Weights <- as.vector(BCI_3_Null[,3])
-BCI_Noweights <- as.vector(BCI_3_Null[,1:2])
-BCIDist <- dist(BCI_3_Null[,1:2])
-
-
-
-BCIClust <- densityClust(BCI_Weights, BCIDist, gaussian=FALSE)
-
-#orig = data.matrix(BCI_Noweights, rownames.force = NA)
-#orig = simplify2array(BCI_Noweights)
-
-BCIComb2 <- findCluster_validationChart(BCIClust)
-
-
-
-plot(BCIClust) # Inspect clustering attributes to define thresholds
-BCIClust2 <- findClusters(BCIClust, rho=3.6, delta=0.1, verbose = TRUE)
-plotMDS(BCIClust2)
-#split(iris[,5], BCIClust$clusters)
-
-
-
 ```
 
 

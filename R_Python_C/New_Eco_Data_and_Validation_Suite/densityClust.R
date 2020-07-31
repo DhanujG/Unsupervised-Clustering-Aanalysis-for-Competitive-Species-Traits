@@ -1,5 +1,5 @@
 library(reticulate)
-py_install("scipy")
+#py_install("scipy")
 #use_python("/usr/local/bin/python")
 #use_virtualenv("myenv")
 source_python("DBCV.py")
@@ -75,7 +75,7 @@ localDensity <- function(weights, distance, dc, gaussian = FALSE) {
   # These implementations are faster by virtue of being written in C++
   # They also avoid the need to convert `distance` to a matrix. 
   if (gaussian) {
-    res <- gaussianLocalDensity(distance, attr(distance, "Size"), dc)
+    res <- gaussianLocalDensity(weights, distance, attr(distance, "Size"), dc)
   } else {
     res <- nonGaussianLocalDensity(weights, attr(distance, "Size") * sum(weights), distance, attr(distance, "Size"), dc)
   }
@@ -180,16 +180,20 @@ estimateDc <- function(weights, distance, neighborRateLow = 0.01, neighborRateHi
     # equivalent. The diagonal of the matrix will always be 0, so as long as dc
     # is greater than 0, we add 1 for every element of the diagonal, which is
     # the same as size
-    sum_distance_below_dc <- 0
+    sum_distance_below_dc <- SumCutOff(weights, distance, attr(distance, "Size"), dc)
 
-    for (k in 1:origsize){
+    #for (k in 1:uniquesize){
 
-      if (distance[k] < dc){
-        i,j <- get_ij(k, distance)
-        sum_distance_below_dc <- sum_distance_below_dc + (weights[i]*weights[j])
-      }
+    #  if (distance[k] < dc){
+    #    vals <- get_ij(k, distance)
+    #    sum_distance_below_dc <- sum_distance_below_dc + (weights[vals[1]]*weights[vals[2]])
+    #  }
 
-    }
+    #}
+
+    
+
+
 
 
     neighborRate <- (((sum_distance_below_dc * 2 + (if (0 <= dc) size)) / size - 1)) / size
@@ -273,7 +277,7 @@ estimateDc <- function(weights, distance, neighborRateLow = 0.01, neighborRateHi
 #'
 #' @export
 #' 
-densityClust <- function(weights, distance, dc, gaussian=FALSE, verbose = FALSE, ...) {
+densityClust <- function(orig, weights, distance, dc, gaussian=FALSE, verbose = FALSE, ...) {
 
 
   #orig = unclass(orig)
@@ -296,7 +300,7 @@ densityClust <- function(weights, distance, dc, gaussian=FALSE, verbose = FALSE,
     
     if (verbose) message('Returning result...')
     res <- list(
-      weights = weights
+      weights = weights,
       fpath = path,
       rho = rho, 
       delta = delta, 
@@ -370,14 +374,28 @@ plotMDS.densityCluster <- function(x, ...) {
   } else {
     mds <- cmdscale(x$distance)
   }
-  plot(mds[,1], mds[,2], xlab = '', ylab = '', main = 'MDS plot of observations')
+  if (is.na(x$peaks[1])){
+  plot(, xlab = '', ylab = '', main = 'MDS plot of observations')
+  } else {
+  plot(mds[,1], mds[,2], xlab = '', ylab = '', main = 'MDS plot of observations', cex = 0.75, col = "white")
+  }
+  mds
+
+  #Scale the weights for each point to match their new point size
+  cex_weights = 1.5*((x$weights-min(x$weights))/(max(x$weights)-min(x$weights))) + 0.75
+
+
   if (!is.na(x$peaks[1])) {
     for (i in 1:length(x$peaks)) {
       ind <- which(x$clusters == i)
-      points(mds[ind, 1], mds[ind, 2], col = i + 1, pch = ifelse(x$halo[ind], 1, 19))
+      #points(mds[ind, 1], mds[ind, 2], col = i + 1, pch = ifelse(x$halo[ind], 1, 19))
+      for (index in ind){
+        points(mds[index, 1], mds[index, 2], col = i + 1, pch = ifelse(x$halo[index], 1, 19), cex = cex_weights[index])
+      }
     }
     legend('topright', legend = c('core', 'halo'), pch = c(19, 1), horiz = TRUE)
   }
+  
 }
 #' Plot observations using t-distributed neighbor embedding and colour by cluster
 #' 
