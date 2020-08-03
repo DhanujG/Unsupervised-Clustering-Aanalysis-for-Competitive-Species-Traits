@@ -12,4 +12,8 @@ Editing PlotMDS to scale points based on weights- DONE
 
 DBCV fixed without weights- DONE
 
-NOTE#  implement DBCV with weights, & change cluster center shape -> Uncorrected
+Cluster center shape turned into filled triangle with cross mark
+
+DBCV implemented into regular cluster execution
+
+NOTE#  implement DBCV with weights, knn with weights -> Uncorrected
