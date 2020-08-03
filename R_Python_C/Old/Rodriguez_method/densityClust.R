@@ -152,7 +152,27 @@ estimateDc <- function(distance, neighborRateLow = 0.01, neighborRateHigh = 0.02
     # equivalent. The diagonal of the matrix will always be 0, so as long as dc
     # is greater than 0, we add 1 for every element of the diagonal, which is
     # the same as size
-    neighborRate <- (((sum(distance < dc) * 2 + (if (0 <= dc) size)) / size - 1)) / size
+
+    #The lower triangle of the distance matrix stored by columns in a vector, say do. 
+    #If n is the number of observations, i.e., n <- attr(do, "Size"), 
+    #then for i < j ≤ n, the dissimilarity between (row) i and j is do[n*(i-1) - i*(i-1)/2 + j-i]. 
+    #The length of the vector is n*(n-1)/2, i.e., of order n^2.
+    # If distance has Y points below cutoff -> (r) raw # of points below cutoff
+    # neighbor rate = (r)/n
+
+    # n*(n-1)/2 = y
+    # n = ((2y)/(n-1))
+
+    
+     #(raw # points below cutoff) = (((sum(distance < dc) * 2 )  / size)      )
+
+    
+    # neighborRate = (raw # points below cutoff) / (Total # of points)
+
+    # 1. taking total of point in distance that are below dc
+    # 2. translating that number into total # in raw matrix
+    # 3. Now take raw # points below cutoff / size
+    neighborRate <- ((    (sum(distance < dc) * 2 + (if (0 <= dc) size))      / size - 1) ) / size
     if (neighborRate >= neighborRateLow && neighborRate <= neighborRateHigh) break
     
     if (neighborRate < neighborRateLow) {

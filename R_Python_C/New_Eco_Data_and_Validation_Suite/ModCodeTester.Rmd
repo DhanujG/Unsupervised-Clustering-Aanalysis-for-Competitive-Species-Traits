@@ -76,7 +76,7 @@ BCIChart <- findCluster_validationChart(BCIClust)
 
 
 plot(BCIClust) # Inspect clustering attributes to define thresholds
-BCIClust <- findClusters(BCIClust, rho=330, delta=0.21, verbose = TRUE)
+BCIClust <- findClusters(BCIClust, rho=330, delta=0.11, verbose = FALSE)
 plotMDS(BCIClust)
 #split(iris[,5], BCIClust$clusters)
 ```
@@ -99,14 +99,25 @@ plotMDS(BCIClust)
 
 ```{r}
 iris <- iris
-
+noweights <- rep(1,150)
 irisDist <- dist(iris[,1:4])
-irisClust <- densityClust(irisDist, gaussian=TRUE)
+irisClust <- densityClust(iris[,1:4], noweights, irisDist, gaussian=TRUE)
 plot(irisClust) # Inspect clustering attributes to define thresholds
 
-irisClust <- findClusters(irisClust, rho=2, delta=2)
+
+
+
+```
+
+```{r}
+irisChart <- findCluster_validationChart(irisClust)
+```
+
+```{r}
+irisClust <- findClusters(irisClust, rho=0.01, delta=1.37)
 plotMDS(irisClust)
-split(iris[,5], irisClust$clusters)
+
+#split(iris[,5], irisClust$clusters)
 ```
 
 
