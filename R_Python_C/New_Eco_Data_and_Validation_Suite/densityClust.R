@@ -384,7 +384,7 @@ plotMDS.densityCluster <- function(x, ...) {
   mds
 
   #Scale the weights for each point to match their new point size
-  cex_weights = 1.5*((x$weights-min(x$weights))/(max(x$weights)-min(x$weights))) + 0.75
+  cex_weights = 2*((x$weights-min(x$weights))/(max(x$weights)-min(x$weights))) + 0.5
 
 
   if (!is.na(x$peaks[1])) {
@@ -392,7 +392,15 @@ plotMDS.densityCluster <- function(x, ...) {
       ind <- which(x$clusters == i)
       #points(mds[ind, 1], mds[ind, 2], col = i + 1, pch = ifelse(x$halo[ind], 1, 19))
       for (index in ind){
-        points(mds[index, 1], mds[index, 2], col = i + 1, pch = ifelse(x$halo[index], 1, 19), cex = cex_weights[index])
+        if (index == x$peaks[i]){
+          points(mds[index, 1], mds[index, 2], col = 1, pch = 4, cex = cex_weights[index])
+          points(mds[index, 1], mds[index, 2], col = i + 1, pch = ifelse(x$halo[index], 2, 17), cex = cex_weights[index])
+          
+        }
+        else {
+          points(mds[index, 1], mds[index, 2], col = i + 1, pch = ifelse(x$halo[index], 1, 19), cex = cex_weights[index])
+        }
+        
       }
     }
     legend('topright', legend = c('core', 'halo'), pch = c(19, 1), horiz = TRUE)
@@ -645,9 +653,28 @@ findClusters.densityCluster <- function(x, rho, delta, plot = FALSE, peaks = NUL
   x$peaks <- x$peaks[pk.ordr]
   
   x$clusters <- match(x$clusters, pk.ordr)
-  for (z in 1:x$size){
+
+
+  if (length(x$peaks) > 1 && (length(x$peaks) < 20) ){
+
+        for (z in 1:x$size){
         x$clusters2[z] = x$peaks[x$clusters[z]]
         }
+
+        cpath = paste(getwd(), "/temp_cluster.txt", sep = "")
+        write.table(x$clusters2, file = cpath, col.names = F, row.names =F, sep = ",")
+
+        
+        
+        
+        tempDBCV <- DBCV(x$fpath,cpath)
+        print("DBCV is: ")
+        print(tempDBCV)
+        
+
+
+        
+      }
   
   x
 }
@@ -820,9 +847,9 @@ findCluster_validationChart.densityCluster <- function(x, rho_step = 0, delta_st
         write.table(x$clusters2, file = cpath, col.names = F, row.names =F, sep = ",")
 
         #print(x$clusters)
-        message(paste("Running DBCV for cluster number:", length(x$peaks)))
+        #message(paste("Running DBCV for cluster number:", length(x$peaks)))
         tempDBCV <- DBCV(x$fpath,cpath)
-        message(paste("DBCV was: ", tempDBCV))
+        #message(paste("DBCV was: ", tempDBCV))
 
 
         testClusters[nrow(testClusters) + 1, ] = c(rho, delta, (rho*delta), length(x$peaks), length(x$halo[x$halo == TRUE]), 0, tempDBCV )
