@@ -79,8 +79,11 @@ int SumCutOff(NumericVector weights, NumericVector distance, int nrow, double dc
       //add in neightbors with weights
       if (distance[i] < dc) {
         sum = sum + (weights[col] * weights[row]);
-      } 
-      i++;
+      }
+      if (i < (((nrow*(nrow-1))/2)-1)){
+        i++;
+      }
+      
     }
   }
   

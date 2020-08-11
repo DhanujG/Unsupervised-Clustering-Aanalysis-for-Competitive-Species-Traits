@@ -376,21 +376,15 @@ plotMDS.densityCluster <- function(x, ...) {
   } else {
     mds <- cmdscale(x$distance)
   }
-
-  
-  if (length(x$peaks) == 1){
-  plot(mds[,1], mds[,2], xlab = '', ylab = '', main = 'MDS plot of observations')
+  if (is.na(x$peaks[1])){
+  plot(, xlab = '', ylab = '', main = 'MDS plot of observations')
   } else {
-  plot(mds[,1], mds[,2], xlab = '', ylab = '', main = 'MDS plot of observations', cex = 0.5, col = "white")
+  plot(mds[,1], mds[,2], xlab = '', ylab = '', main = 'MDS plot of observations', cex = 0.75, col = "white")
   }
   mds
 
   #Scale the weights for each point to match their new point size
-  if (max(x$weights) !=  min(x$weights)){
-    cex_weights = 2*((x$weights-min(x$weights))/(max(x$weights)-min(x$weights))) + 0.5
-  } else {
-    cex_weights = rep(1,length(weights))
-  }
+  cex_weights = 2*((x$weights-min(x$weights))/(max(x$weights)-min(x$weights))) + 0.5
 
 
   if (!is.na(x$peaks[1])) {
@@ -399,7 +393,7 @@ plotMDS.densityCluster <- function(x, ...) {
       #points(mds[ind, 1], mds[ind, 2], col = i + 1, pch = ifelse(x$halo[ind], 1, 19))
       for (index in ind){
         if (index == x$peaks[i]){
-          points(mds[index, 1], mds[index, 2], col = i + 1, pch = 4, cex = cex_weights[index])
+          points(mds[index, 1], mds[index, 2], col = 1, pch = 4, cex = cex_weights[index])
           points(mds[index, 1], mds[index, 2], col = i + 1, pch = ifelse(x$halo[index], 2, 17), cex = cex_weights[index])
           
         }

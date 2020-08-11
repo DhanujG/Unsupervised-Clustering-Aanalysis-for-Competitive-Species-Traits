@@ -1,3 +1,8 @@
+My log to keep track of completed tasks and tasks to complete
+
+NOTE#  IMPLEMENTED 
+
+
 Added Python Functionality in findvalidation for DBCV - DONE
 
 Editing Estimate DC from DensityClust to include weights - DONE
@@ -16,4 +21,15 @@ Cluster center shape turned into filled triangle with cross mark
 
 DBCV implemented into regular cluster execution
 
-NOTE#  implement DBCV with weights, knn with weights -> Uncorrected
+
+
+
+NOTE#  TODO implement   
+
+     
+			DBCV with weights
+			Fix plots in densityclust and execute 
+			knn with weights 
+			convert dbcv to c++
+			convert density clust to main
+			Wrap in Package
